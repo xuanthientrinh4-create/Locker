@@ -1,16 +1,29 @@
-local URL = "https://raw.githubusercontent.com/xuanthientrinh4-create/Locker/refs/heads/main/leak%20locker.lua"
+-- ===== HOOK (CHẠY TRƯỚC) =====
+local dumped = false
+local old_concat = table.concat
 
--- hook
-local old_loadstring = loadstring
-loadstring = function(src, ...)
-    if type(src) == "string" and #src > 1000 then
-        -- lưu code đã được client load/giải
-        writefile("locker.lua", src)
-        warn("[OK] Saved to locker.lua")
+table.concat = function(t, ...)
+    local res = old_concat(t, ...)
+    if not dumped
+        and type(res) == "string"
+        and #res > 3000
+        and res:find("function") then
+
+        dumped = true
+        local ok, err = pcall(function()
+            writefile("locker.lua", res)
+        end)
+
+        if ok then
+            warn("[OK] Saved locker.lua")
+        else
+            warn("[ERROR] writefile failed:", err)
+        end
     end
-    return old_loadstring(src, ...)
+    return res
 end
 
--- lấy code 
-local code = game:HttpGet(URL)
-loadstring(code)()
+-- ===== LOAD FILE CẦN GIẢI (CHỈ 1 LẦN) =====
+loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/xuanthientrinh4-create/Locker/main/leak%20locker.lua"
+))()
